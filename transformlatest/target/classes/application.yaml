@@ -1,0 +1,87 @@
+server:
+  port: 8080
+  tomcat:
+    threads:
+      # Max concurrent request-handling threads (virtual threads can be enabled below)
+      max: ${APP_TOMCAT_MAX_THREADS:200}
+      min-spare: ${APP_TOMCAT_MIN_SPARE_THREADS:10}
+    # Queue length for incoming connections when all request threads are busy
+    accept-count: ${APP_TOMCAT_ACCEPT_COUNT:100}
+    # Max simultaneous TCP connections
+    max-connections: ${APP_TOMCAT_MAX_CONNECTIONS:10000}
+  # Guardrail for slow clients / connections
+  connection-timeout: ${APP_SERVER_CONNECTION_TIMEOUT:20s}
+
+spring:
+  application:
+    name: transformation-service
+  threads:
+    virtual:
+      # Java 21 virtual threads improve high-concurrency request handling
+      enabled: ${APP_VIRTUAL_THREADS_ENABLED:true}
+
+camel:
+  springboot:
+    main-run-controller: true
+
+app:
+  config:
+    base-path: classpath:config
+  cartridges:
+    base-path: classpath:cartridges
+  cache:
+    # Pre-warm caches at startup for zero cold-start latency
+    warm-on-startup: true
+    # Preload Drools rules at startup
+    preload-rules: true
+    common-currencies:
+      - USD
+      - EUR
+      - GBP
+      - INR
+      - JPY
+      - CAD
+      - AUD
+  visa:
+    base-url: https://sandbox.api.visa.com
+    path: /visapayouts/v3/payouts
+    invoke-enabled: false
+  template-selection:
+    template-id-format: "{cartridgeId}_{country}_{currency}_{segment}_TEMPLATE"
+    recipient-type-business: "B"
+    recipient-type-individual: "I"
+    segment-business: "B2B"
+    segment-individual: "B2C"
+  routing:
+    key-format: "{cartridgeCode}_{paymentSchema}_{country}_{currency}_{segment}"
+  persistence:
+    # false = skip DB persistence (no datasource required)
+    enabled: false
+    raw-table: TRANSFORM_RAW
+    transformed-table: TRANSFORM_OUT
+    # JDBC settings (only used when persistence.enabled=true)
+    jdbc-url: ${APP_DB_JDBC_URL:}
+    username: ${APP_DB_USERNAME:}
+    password: ${APP_DB_PASSWORD:}
+    # Hikari pool limits (cap DB concurrency)
+    max-pool-size: ${APP_DB_MAX_POOL_SIZE:10}
+    min-idle: ${APP_DB_MIN_IDLE:2}
+    connection-timeout-ms: ${APP_DB_CONNECTION_TIMEOUT_MS:5000}
+
+logging:
+  level:
+    org.apache.camel: INFO
+    com.example.transformation: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

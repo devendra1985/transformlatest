@@ -1,0 +1,27 @@
+# ============================================================================
+# VISA VISABA Template - GBR GBP B2B
+# ============================================================================
+
+route:
+  id: VISABA_GBR_GBP_B2B_TEMPLATE-route
+  from:
+    uri: "direct:VISABA-VISABA_GBR_GBP_B2B_TEMPLATE"
+    steps:
+      - bean:
+          ref: persistRaw
+          method: process
+      - bean:
+          ref: validate
+          method: process
+      - bean:
+          ref: enrich
+          method: process
+      - bean:
+          ref: dtoTransform
+          method: process
+      - bean:
+          ref: persistTransformed
+          method: process
+      - setHeader:
+          name: Content-Type
+          constant: application/json

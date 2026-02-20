@@ -1,0 +1,20 @@
+# Maps providers to their cartridge IDs and cartridge codes
+# Cartridge code decides which transformation flow to use.
+cartridgeCodeFlows:
+  C1: CJSON_TO_API
+  C2: CJSON_TO_XML
+  C3: API_TO_CJSON
+  C4: XML_TO_API
+cartridgeSelections:
+  C1|PayoutAPI|VISABA:
+    cartridgeId: VISABA
+    flowId: CJSON_TO_API
+  C2|PayoutAPI|VISABA:
+    cartridgeId: VISABA
+    flowId: CJSON_TO_XML
+providers:
+  VISA:
+    name: "Visa Direct"
+    cartridges:
+      - id: VISABA
+        cartridgeCode: C1
