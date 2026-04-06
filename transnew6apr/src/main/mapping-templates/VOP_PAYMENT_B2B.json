@@ -1,0 +1,19 @@
+{
+  "apiType": "VOP_PAYMENT",
+  "targetClass": "com.example.transformation.dto.visa.AccountVerificationRequest",
+  "rules": [
+    { "target": "payoutMethod",                            "defaultValue": "B" },
+
+    { "source": "transaction.initiatingPartyId",           "target": "initiatingPartyId",                        "transform": "toString" },
+    { "source": "transaction.instructionId",               "target": "clientVerificationReference" },
+
+    { "source": "transaction.creditorName",                "target": "recipientDetail.name" },
+    { "source": "transaction.recipientType",               "target": "recipientDetail.type",                     "transform": "recipientType" },
+    { "source": "transaction.creditorAgentClearingId",     "target": "recipientDetail.bank.bankCode" },
+    { "source": "transaction.creditorAgentName",           "target": "recipientDetail.bank.bankName" },
+    { "source": "transaction.creditorAccountName",         "target": "recipientDetail.bank.accountName" },
+    { "source": "transaction.creditorAccountIban",         "target": "recipientDetail.bank.accountNumber" },
+    { "source": "transaction.creditorAccountCurrency",     "target": "recipientDetail.bank.currencyCode" },
+    { "source": "transaction.creditorPostalCountry",       "target": "recipientDetail.bank.countryCode" }
+  ]
+}

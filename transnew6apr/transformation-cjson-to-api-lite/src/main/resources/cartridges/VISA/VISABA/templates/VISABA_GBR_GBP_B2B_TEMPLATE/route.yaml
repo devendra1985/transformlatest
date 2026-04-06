@@ -1,0 +1,5 @@
+# Placeholder route file for template existence checks
+route:
+  id: VISABA_GBR_GBP_B2B_TEMPLATE-route
+  from:
+    uri: "direct:VISABA-VISABA_GBR_GBP_B2B_TEMPLATE"

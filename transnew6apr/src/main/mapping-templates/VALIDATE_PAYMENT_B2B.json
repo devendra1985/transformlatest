@@ -1,0 +1,28 @@
+{
+  "apiType": "VALIDATE_PAYMENT",
+  "targetClass": "com.example.transformation.dto.visa.ValidatePayoutAccountRequest",
+  "rules": [
+    { "target": "payoutMethod",                            "defaultValue": "B" },
+
+    { "source": "transaction.creditorName",                "target": "recipientDetail.name" },
+    { "source": "transaction.creditorAgentClearingId",     "target": "recipientDetail.bank.bankCode" },
+    { "source": "transaction.creditorAgentName",           "target": "recipientDetail.bank.bankName" },
+    { "source": "transaction.creditorAccountName",         "target": "recipientDetail.bank.accountName" },
+    { "source": "transaction.creditorAccountIban",         "target": "recipientDetail.bank.accountNumber" },
+    { "source": "transaction.creditorAccountCurrency",     "target": "recipientDetail.bank.currencyCode" },
+    { "source": "transaction.creditorPostalCountry",       "target": "recipientDetail.bank.countryCode" },
+    { "source": "transaction.creditorAccountNumberType",   "target": "recipientDetail.bank.accountNumberType" },
+    { "source": "transaction.creditorPostalStreet",        "target": "recipientDetail.address.addressLine1" },
+    { "source": "transaction.creditorPostalCity",          "target": "recipientDetail.address.city" },
+    { "source": "transaction.creditorPostalCountry",       "target": "recipientDetail.address.country" },
+    { "source": "transaction.creditorPostalPostalCode",    "target": "recipientDetail.address.postalCode" },
+
+    { "source": "transaction.debtorName",                  "target": "senderDetail.name" },
+    { "source": "transaction.debtorAccountIban",           "target": "senderDetail.senderAccountNumber" },
+
+    { "source": "transaction.initiatingPartyId",           "target": "transactionDetail.initiatingPartyId" },
+    { "source": "transaction.transactionAmount",           "target": "transactionDetail.transactionAmount",      "transform": "toMoney" },
+    { "source": "transaction.transactionCurrencyCode",     "target": "transactionDetail.transactionCurrencyCode" },
+    { "source": "transaction.endToEndId",                  "target": "transactionDetail.endToEndId" }
+  ]
+}

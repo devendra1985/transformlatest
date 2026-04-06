@@ -1,0 +1,5 @@
+# Minimal enrichment rules (can be extended)
+rules:
+  - set:
+      target: "transactionDetail.businessApplicationId"
+      value: "PP"

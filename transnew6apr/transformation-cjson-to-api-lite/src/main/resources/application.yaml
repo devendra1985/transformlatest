@@ -1,0 +1,9 @@
+app:
+  template-selection:
+    template-id-format: "{cartridgeId}_{country}_{currency}_{segment}_TEMPLATE"
+    recipient-type-business: "B"
+    recipient-type-individual: "I"
+    segment-business: "B2B"
+    segment-individual: "B2C"
+  routing:
+    key-format: "{cartridgeCode}_{paymentSchema}_{country}_{currency}_{segment}"

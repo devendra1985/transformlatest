@@ -1,0 +1,208 @@
+package cartridges.VISA.VISABA.templates.VISABA_GBR_GBP_B2B_TEMPLATE.rules
+
+import com.example.transformation.dto.visa.AccountPayoutRequest2;
+import com.example.transformation.dto.visa.PayoutMethod;
+import com.example.transformation.dto.visa.Type;
+import com.example.transformation.validation.ValidationError;
+import java.util.List;
+
+global List errors;
+
+rule "account payout transaction detail required"
+when
+  AccountPayoutRequest2( transactionDetail == null )
+then
+  errors.add(new ValidationError("transactionDetail", "transaction detail is required"));
+end
+
+rule "account payout method required"
+when
+  AccountPayoutRequest2( payoutMethod == null )
+then
+  errors.add(new ValidationError("payoutMethod", "payout method is required"));
+end
+
+rule "account payout method must be account"
+when
+  AccountPayoutRequest2( payoutMethod != null && payoutMethod != PayoutMethod.B )
+then
+  errors.add(new ValidationError("payoutMethod", "payout method must be B for account payout"));
+end
+
+rule "account payout client reference required"
+when
+  AccountPayoutRequest2(
+      transactionDetail != null &&
+      (transactionDetail.clientReferenceId == null || transactionDetail.clientReferenceId == "")
+  )
+then
+  errors.add(new ValidationError("transactionDetail.clientReferenceId", "client reference id is required"));
+end
+
+rule "account payout business application id required"
+when
+  AccountPayoutRequest2(
+      transactionDetail != null &&
+      (transactionDetail.businessApplicationId == null || transactionDetail.businessApplicationId == "")
+  )
+then
+  errors.add(new ValidationError("transactionDetail.businessApplicationId", "business application id is required"));
+end
+
+rule "account payout initiating party id required"
+when
+  AccountPayoutRequest2( transactionDetail != null && transactionDetail.initiatingPartyId == null )
+then
+  errors.add(new ValidationError("transactionDetail.initiatingPartyId", "initiating party id is required"));
+end
+
+rule "account payout transaction amount required"
+when
+  AccountPayoutRequest2( transactionDetail != null && transactionDetail.transactionAmount == null )
+then
+  errors.add(new ValidationError("transactionDetail.transactionAmount", "transaction amount is required"));
+end
+
+rule "account payout transaction currency required"
+when
+  AccountPayoutRequest2(
+      transactionDetail != null &&
+      (transactionDetail.transactionCurrencyCode == null || transactionDetail.transactionCurrencyCode == "")
+  )
+then
+  errors.add(new ValidationError("transactionDetail.transactionCurrencyCode", "transaction currency code is required"));
+end
+
+rule "account payout recipient/sender required"
+when
+  AccountPayoutRequest2( recipientDetail == null || senderDetail == null )
+then
+  errors.add(new ValidationError("recipientDetail", "recipient and sender details are required"));
+end
+
+rule "account payout sender type required"
+when
+  AccountPayoutRequest2( senderDetail != null && senderDetail.type == null )
+then
+  errors.add(new ValidationError("senderDetail.type", "sender type is required"));
+end
+
+rule "account payout sender company name required"
+when
+  AccountPayoutRequest2(
+      senderDetail != null &&
+      senderDetail.type == Type.C &&
+      (senderDetail.name == null || senderDetail.name == "")
+  )
+then
+  errors.add(new ValidationError("senderDetail.name", "sender company name is required"));
+end
+
+rule "account payout recipient type required"
+when
+  AccountPayoutRequest2( recipientDetail != null && recipientDetail.type == null )
+then
+  errors.add(new ValidationError("recipientDetail.type", "recipient type is required"));
+end
+
+rule "account payout recipient company name required"
+when
+  AccountPayoutRequest2(
+      recipientDetail != null &&
+      recipientDetail.type == Type.C &&
+      (recipientDetail.name == null || recipientDetail.name == "")
+  )
+then
+  errors.add(new ValidationError("recipientDetail.name", "recipient company name is required"));
+end
+
+rule "account payout sender address required"
+when
+  AccountPayoutRequest2( senderDetail != null && senderDetail.address == null )
+then
+  errors.add(new ValidationError("senderDetail.address", "sender address is required"));
+end
+
+rule "account payout sender address line1 required"
+when
+  AccountPayoutRequest2(
+      senderDetail.address != null &&
+      (senderDetail.address.addressLine1 == null || senderDetail.address.addressLine1 == "")
+  )
+then
+  errors.add(new ValidationError("senderDetail.address.addressLine1", "sender address line1 is required"));
+end
+
+rule "account payout sender address city required"
+when
+  AccountPayoutRequest2(
+      senderDetail.address != null &&
+      (senderDetail.address.city == null || senderDetail.address.city == "")
+  )
+then
+  errors.add(new ValidationError("senderDetail.address.city", "sender address city is required"));
+end
+
+rule "account payout sender address country required"
+when
+  AccountPayoutRequest2(
+      senderDetail.address != null &&
+      (senderDetail.address.country == null || senderDetail.address.country == "")
+  )
+then
+  errors.add(new ValidationError("senderDetail.address.country", "sender address country is required"));
+end
+
+rule "account payout bank required"
+when
+  AccountPayoutRequest2( recipientDetail != null && recipientDetail.bank == null )
+then
+  errors.add(new ValidationError("recipientDetail.bank", "bank details are required for account payout"));
+end
+
+rule "account payout bank account name required"
+when
+  AccountPayoutRequest2(
+      recipientDetail.bank != null &&
+      (recipientDetail.bank.accountName == null || recipientDetail.bank.accountName == "")
+  )
+then
+  errors.add(new ValidationError("recipientDetail.bank.accountName", "bank account name is required"));
+end
+
+rule "account payout bank account number required"
+when
+  AccountPayoutRequest2(
+      recipientDetail.bank != null &&
+      (recipientDetail.bank.accountNumber == null || recipientDetail.bank.accountNumber == "")
+  )
+then
+  errors.add(new ValidationError("recipientDetail.bank.accountNumber", "bank account number is required"));
+end
+
+rule "account payout bank account number type required"
+when
+  AccountPayoutRequest2( recipientDetail.bank != null && recipientDetail.bank.accountNumberType == null )
+then
+  errors.add(new ValidationError("recipientDetail.bank.accountNumberType", "bank account number type is required"));
+end
+
+rule "account payout bank country code required"
+when
+  AccountPayoutRequest2(
+      recipientDetail.bank != null &&
+      (recipientDetail.bank.countryCode == null || recipientDetail.bank.countryCode == "")
+  )
+then
+  errors.add(new ValidationError("recipientDetail.bank.countryCode", "bank country code is required"));
+end
+
+rule "account payout bank currency code required"
+when
+  AccountPayoutRequest2(
+      recipientDetail.bank != null &&
+      (recipientDetail.bank.currencyCode == null || recipientDetail.bank.currencyCode == "")
+  )
+then
+  errors.add(new ValidationError("recipientDetail.bank.currencyCode", "bank currency code is required"));
+end

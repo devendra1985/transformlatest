@@ -1,0 +1,13 @@
+{
+  "apiType": "RETURN_PAYMENT",
+  "targetClass": "com.example.transformation.dto.visa.PayoutReturnRequest",
+  "rules": [
+    { "target": "payoutMethod",                            "defaultValue": "B" },
+
+    { "source": "transaction.instructionId",               "target": "transactionDetail.clientReferenceId" },
+    { "source": "transaction.endToEndId",                  "target": "transactionDetail.endToEndId" },
+    { "source": "transaction.initiatingPartyId",           "target": "transactionDetail.initiatingPartyId" },
+    { "source": "transaction.transactionAmount",           "target": "transactionDetail.returnAmount",           "transform": "toMoney" },
+    { "source": "transaction.transactionCurrencyCode",     "target": "transactionDetail.returnCurrencyCode" }
+  ]
+}

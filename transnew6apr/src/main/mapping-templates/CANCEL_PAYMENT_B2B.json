@@ -1,0 +1,7 @@
+{
+  "apiType": "CANCEL_PAYMENT",
+  "targetClass": "com.example.transformation.dto.visa.CancelPayoutRequest",
+  "rules": [
+    { "source": "transaction.instructionId",               "target": "transactionDetail.narrative" }
+  ]
+}

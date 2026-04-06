@@ -1,0 +1,44 @@
+{
+  "apiType": "CREATE_PAYMENT",
+  "segment": "B2B",
+  "targetClass": "com.example.transformation.dto.visa.AccountPayoutRequest2",
+  "rules": [
+    { "target": "payoutMethod",                            "defaultValue": "B" },
+    { "target": "transactionDetail.businessApplicationId", "defaultValue": "PP" },
+
+    { "source": "transaction.creditorName",                "target": "recipientDetail.name" },
+    { "source": "transaction.recipientType",               "target": "recipientDetail.type",                     "transform": "recipientType" },
+    { "source": "transaction.creditorAgentClearingId",     "target": "recipientDetail.bank.bankCode" },
+    { "source": "transaction.creditorAgentName",           "target": "recipientDetail.bank.bankName" },
+    { "source": "transaction.creditorAccountName",         "target": "recipientDetail.bank.accountName" },
+    { "source": "transaction.creditorAccountIban",         "target": "recipientDetail.bank.accountNumber" },
+    { "source": "transaction.creditorAccountCurrency",     "target": "recipientDetail.bank.currencyCode" },
+    { "source": "transaction.creditorPostalCountry",       "target": "recipientDetail.bank.countryCode" },
+    { "source": "transaction.creditorAccountNumberType",   "target": "recipientDetail.bank.accountNumberType" },
+    { "source": "transaction.creditorPostalStreet",        "target": "recipientDetail.address.addressLine1" },
+    { "source": "transaction.creditorPostalCity",          "target": "recipientDetail.address.city" },
+    { "source": "transaction.creditorPostalCountry",       "target": "recipientDetail.address.country" },
+    { "source": "transaction.creditorPostalPostalCode",    "target": "recipientDetail.address.postalCode" },
+    { "source": "transaction.creditorContactEmail",        "target": "recipientDetail.contactEmail" },
+    { "source": "transaction.creditorContactPhone",        "target": "recipientDetail.contactNumber" },
+
+    { "source": "transaction.debtorName",                  "target": "senderDetail.name" },
+    { "source": "transaction.debtorAccountIban",           "target": "senderDetail.senderAccountNumber" },
+    { "source": "transaction.debtorPostalStreet",          "target": "senderDetail.address.addressLine1" },
+    { "source": "transaction.debtorPostalCity",            "target": "senderDetail.address.city" },
+    { "source": "transaction.debtorPostalCountry",         "target": "senderDetail.address.country" },
+    { "source": "transaction.debtorPostalPostalCode",      "target": "senderDetail.address.postalCode" },
+    { "source": "transaction.debtorContactEmail",          "target": "senderDetail.contactEmail" },
+    { "source": "transaction.debtorContactPhone",          "target": "senderDetail.contactNumber" },
+
+    { "source": "transaction.instructionId",               "target": "transactionDetail.clientReferenceId" },
+    { "source": "transaction.initiatingPartyId",           "target": "transactionDetail.initiatingPartyId" },
+    { "source": "transaction.transactionAmount",           "target": "transactionDetail.transactionAmount",      "transform": "toMoney" },
+    { "source": "transaction.transactionCurrencyCode",     "target": "transactionDetail.transactionCurrencyCode" },
+    { "source": "transaction.settlementCurrencyCode",      "target": "transactionDetail.settlementCurrencyCode" },
+    { "source": "transaction.endToEndId",                  "target": "transactionDetail.endToEndId" },
+    { "source": "transaction.purposeCode",                 "target": "transactionDetail.purposeOfPayment" },
+    { "source": "transaction.fxQuoteId",                   "target": "transactionDetail.quoteId" },
+    { "source": "transaction.remittance",                  "target": "transactionDetail.statementNarrative",     "transform": "firstElement" }
+  ]
+}

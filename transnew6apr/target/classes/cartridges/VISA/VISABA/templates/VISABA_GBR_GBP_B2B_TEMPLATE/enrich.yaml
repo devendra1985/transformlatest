@@ -1,0 +1,11 @@
+# ============================================================================
+# VISA VISABA Template - GBR GBP B2B Enrichment Rules
+# ============================================================================
+
+cartridgeId: VISABA
+
+rules:
+  # Keep base defaults and override here when needed
+  - set:
+      target: payoutMethod
+      value: "B"

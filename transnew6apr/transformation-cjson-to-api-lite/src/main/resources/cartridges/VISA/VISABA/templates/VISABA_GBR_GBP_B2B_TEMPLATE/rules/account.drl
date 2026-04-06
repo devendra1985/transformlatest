@@ -1,0 +1,11 @@
+package cartridges.VISA.VISABA.templates.VISABA_GBR_GBP_B2B_TEMPLATE.rules
+
+import com.example.transformation.dto.visa.AccountPayoutRequest2
+
+// Minimal rule placeholder to ensure rule base loads
+rule "noop"
+when
+  $req : AccountPayoutRequest2()
+then
+  // no-op
+end

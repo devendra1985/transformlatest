@@ -1,0 +1,23 @@
+{
+  "C2_VISABA_GBR_GBP_B2B": {
+    "cartridgeId": "VISABA",
+    "templateId": "VISABA_GBR_GBP_B2B_TEMPLATE",
+    "enrichPath": "cartridges/VISA/VISABA/templates/VISABA_GBR_GBP_B2B_TEMPLATE/enrich.yaml",
+    "rulesPath": "cartridges/VISA/VISABA/templates/VISABA_GBR_GBP_B2B_TEMPLATE/rules",
+    "routePath": "cartridges/VISA/VISABA/templates/VISABA_GBR_GBP_B2B_TEMPLATE/route.yaml"
+  },
+  "C1_VISABA_GBR_GBP_B2B": {
+    "cartridgeId": "VISABA",
+    "templateId": "VISABA_GBR_GBP_B2B_TEMPLATE",
+    "enrichPath": "cartridges/VISA/VISABA/templates/VISABA_GBR_GBP_B2B_TEMPLATE/enrich.yaml",
+    "rulesPath": "cartridges/VISA/VISABA/templates/VISABA_GBR_GBP_B2B_TEMPLATE/rules",
+    "routePath": "cartridges/VISA/VISABA/templates/VISABA_GBR_GBP_B2B_TEMPLATE/route.yaml"
+  },
+  "C1_VISABA_HU_KWR_B2B": {
+    "cartridgeId": "VISABA",
+    "templateId": "VISABA_GBR_GBP_B2B_TEMPLATE",
+    "enrichPath": "cartridges/VISA/VISABA/templates/VISABA_GBR_GBP_B2B_TEMPLATE/enrich.yaml",
+    "rulesPath": "cartridges/VISA/VISABA/templates/VISABA_GBR_GBP_B2B_TEMPLATE/rules",
+    "routePath": "cartridges/VISA/VISABA/templates/VISABA_GBR_GBP_B2B_TEMPLATE/route.yaml"
+  }
+}

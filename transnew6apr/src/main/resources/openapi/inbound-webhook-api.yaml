@@ -1,0 +1,346 @@
+openapi: 3.0.1
+info:
+  title: Transformation Layer – Inbound Webhook API
+  description: |
+    Exposes webhook endpoints that receive inbound payment notifications from third-party vendors
+    (e.g. Visa) via a gateway.
+
+    ## End-to-end flow
+    ```
+    Vendor ──POST──► Webhook ──► Gateway ──► POST /api/inbound/webhook/{vendorId}/{cartridgeId}
+                                                     │
+                                              InboundWebhookController
+                                                     │
+                                          Camel: direct:inbound-{cartridgeId}
+                                                     │
+                                          InboundPersistProcessor
+                                           (persist raw payload → DB)
+                                                     │
+                                          ◄── 202 Accepted (WebhookAckResponse)
+    ```
+
+    The service acknowledges the webhook **synchronously** (persists to DB first, then responds)
+    so that the gateway receives a definitive HTTP status code.
+
+  version: 1.0.0
+  contact:
+    name: Transformation Layer Team
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+  - url: https://transformation-service.internal
+    description: Internal gateway URL
+
+tags:
+  - name: Inbound Webhook
+    description: Receive inbound payment events from vendors via gateway
+
+paths:
+
+  /api/inbound/webhook/{vendorId}/{cartridgeId}:
+    post:
+      tags:
+        - Inbound Webhook
+      summary: Receive inbound payment webhook
+      description: |
+        Accepts an inbound payment notification from a third-party vendor forwarded by the gateway.
+
+        **Processing steps:**
+        1. Extract / generate a `correlationId`
+        2. Persist the raw payload to `TRANSFORMATION_PAYLOADS` with status `INBOUND_RECEIVED`
+        3. Return `202 Accepted` with a `WebhookAckResponse` containing the `correlationId`
+
+        The gateway should treat any non-`2xx` response as a delivery failure and retry according
+        to its retry policy.
+
+      operationId: receiveInboundWebhook
+      parameters:
+        - $ref: '#/components/parameters/vendorId'
+        - $ref: '#/components/parameters/cartridgeId'
+        - $ref: '#/components/parameters/xCorrelationId'
+        - $ref: '#/components/parameters/xVendorSignature'
+        - $ref: '#/components/parameters/xWebhookEvent'
+
+      requestBody:
+        required: true
+        description: Vendor-specific inbound payment payload forwarded by the gateway.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InboundWebhookPayload'
+            examples:
+              visaInboundPayout:
+                summary: Visa inbound payout notification
+                value:
+                  header:
+                    correlationId: "TXN-20260320-001"
+                    eventType: "PAYMENT_INBOUND"
+                    timestamp: "2026-03-20T10:15:30Z"
+                    vendorReference: "VISA-REF-9876"
+                  body:
+                    paymentId: "PAY-12345"
+                    amount: 1000.00
+                    currency: "USD"
+                    sender:
+                      name: "John Doe"
+                      accountNumber: "4111111111111111"
+                    receiver:
+                      name: "Acme Corp"
+                      accountNumber: "4222222222222222"
+                    status: "COMPLETED"
+                    transactionDate: "2026-03-20"
+
+      responses:
+        '202':
+          description: Payload accepted and persisted successfully.
+          headers:
+            X-Request-Id:
+              description: Internal correlation/request ID assigned to this webhook event.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookAckResponse'
+              example:
+                status: ACCEPTED
+                correlationId: "TXN-20260320-001"
+                message: "Payload received and persisted"
+                timestamp: "2026-03-20T10:15:31Z"
+
+        '400':
+          description: Bad request – missing required fields or malformed JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                errorCode: "INVALID_PAYLOAD"
+                errorMessage: "Request body must be valid JSON"
+                correlationId: null
+                timestamp: "2026-03-20T10:15:31Z"
+
+        '404':
+          description: Unknown cartridgeId – no inbound route registered for the given cartridge.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                errorCode: "CARTRIDGE_NOT_FOUND"
+                errorMessage: "No inbound route registered for cartridgeId: UNKNOWN"
+                correlationId: null
+                timestamp: "2026-03-20T10:15:31Z"
+
+        '500':
+          description: Internal server error – persistence or processing failure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                errorCode: "PROCESSING_FAILED"
+                errorMessage: "Unexpected error during webhook processing"
+                correlationId: "TXN-20260320-001"
+                timestamp: "2026-03-20T10:15:31Z"
+
+  /api/inbound/webhook/health:
+    get:
+      tags:
+        - Inbound Webhook
+      summary: Inbound webhook readiness probe
+      description: |
+        Lightweight health check confirming the inbound webhook endpoint is reachable.
+        Can be called by the gateway or load-balancer to verify service availability.
+      operationId: inboundWebhookHealth
+      responses:
+        '200':
+          description: Service is healthy and ready to accept webhooks.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: UP
+                service: transformation-service
+                timestamp: "2026-03-20T10:15:30Z"
+
+# ─────────────────────────────────────────────────────────────────────────────
+components:
+# ─────────────────────────────────────────────────────────────────────────────
+
+  parameters:
+
+    vendorId:
+      name: vendorId
+      in: path
+      required: true
+      description: Vendor identifier (e.g. `VISA`, `MC`, `SWIFT`).
+      schema:
+        type: string
+        example: VISA
+
+    cartridgeId:
+      name: cartridgeId
+      in: path
+      required: true
+      description: Cartridge identifier that determines the Camel processing route (e.g. `VISABA`).
+      schema:
+        type: string
+        example: VISABA
+
+    xCorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      description: |
+        Client-supplied correlation ID. If absent, the service generates one.
+        Echoed back in the response body and `X-Request-Id` header.
+      schema:
+        type: string
+        example: "TXN-20260320-001"
+
+    xVendorSignature:
+      name: X-Vendor-Signature
+      in: header
+      required: false
+      description: |
+        HMAC-SHA256 signature supplied by the vendor for payload integrity verification.
+        Format: `sha256=<hex-digest>`.
+      schema:
+        type: string
+        example: "sha256=abc123def456"
+
+    xWebhookEvent:
+      name: X-Webhook-Event
+      in: header
+      required: false
+      description: Vendor-defined event type (e.g. `PAYMENT_INBOUND`, `REFUND`, `REVERSAL`).
+      schema:
+        type: string
+        example: "PAYMENT_INBOUND"
+
+  schemas:
+
+    InboundWebhookPayload:
+      type: object
+      description: Generic inbound payment event forwarded by the vendor. Structure is vendor-specific.
+      properties:
+        header:
+          $ref: '#/components/schemas/WebhookPayloadHeader'
+        body:
+          type: object
+          description: Vendor-specific payment data. Any JSON structure is accepted.
+          additionalProperties: true
+      required:
+        - body
+      example:
+        header:
+          correlationId: "TXN-20260320-001"
+          eventType: "PAYMENT_INBOUND"
+          timestamp: "2026-03-20T10:15:30Z"
+          vendorReference: "VISA-REF-9876"
+        body:
+          paymentId: "PAY-12345"
+          amount: 1000.00
+          currency: "USD"
+
+    WebhookPayloadHeader:
+      type: object
+      description: Optional metadata envelope provided by the vendor.
+      properties:
+        correlationId:
+          type: string
+          description: Vendor-supplied correlation / transaction ID.
+          example: "TXN-20260320-001"
+        eventType:
+          type: string
+          description: Vendor event type identifier.
+          example: "PAYMENT_INBOUND"
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the event was generated at the vendor side.
+          example: "2026-03-20T10:15:30Z"
+        vendorReference:
+          type: string
+          description: Vendor's own internal reference number.
+          example: "VISA-REF-9876"
+
+    WebhookAckResponse:
+      type: object
+      description: Acknowledgment returned to the gateway after the payload is persisted.
+      required:
+        - status
+        - correlationId
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum:
+            - ACCEPTED
+            - REJECTED
+          description: Processing outcome.
+          example: ACCEPTED
+        correlationId:
+          type: string
+          description: The correlation ID used to track this event end-to-end.
+          example: "TXN-20260320-001"
+        message:
+          type: string
+          description: Human-readable status detail.
+          example: "Payload received and persisted"
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the acknowledgment was generated.
+          example: "2026-03-20T10:15:31Z"
+
+    ErrorResponse:
+      type: object
+      description: Standardised error payload.
+      required:
+        - errorCode
+        - errorMessage
+        - timestamp
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+          example: "CARTRIDGE_NOT_FOUND"
+        errorMessage:
+          type: string
+          description: Human-readable error description.
+          example: "No inbound route registered for cartridgeId: UNKNOWN"
+        correlationId:
+          type: string
+          nullable: true
+          description: Correlation ID if available at error time.
+          example: "TXN-20260320-001"
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the error occurred.
+          example: "2026-03-20T10:15:31Z"
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - service
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum:
+            - UP
+            - DOWN
+          example: UP
+        service:
+          type: string
+          example: transformation-service
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-03-20T10:15:30Z"
